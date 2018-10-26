@@ -2,7 +2,7 @@
 
 /**
  * @package AgileCRM_ContactForm7
- * @version 1.0
+ * @version 1.1
  */
 /*
  * Plugin Name: Agile CRM Contact Form 7 Forms
@@ -10,7 +10,7 @@
  * Description: Agile CRM integration plugin for contact forms (contact form7). Sync form entries to Agile easily.
  * Author: Agile CRM Team
  * Author URI: https://www.agilecrm.com/
- * Version: 1.0
+ * Version: 1.1
  * Requires at least: 4.0
  * Tested up to: 4.9
  */
@@ -318,6 +318,10 @@ if (!class_exists('AgileCF7Addon')) {
                                     if($fieldKey == "email"){
                                         $contact_email = $formdata[$mappedFields[$fieldKey]];           
                                     }
+                                    
+                                    if($formdata[$mappedFields[$fieldKey]] == ""){
+                                        $formdata[$mappedFields[$fieldKey]] = " ";
+                                    }                                    
 
                                     if ($fieldVal['is_address']) {
                                         $addressField = explode("_", $fieldKey);
@@ -377,6 +381,13 @@ if (!class_exists('AgileCF7Addon')) {
                             $contact_id = $search_email->id;
                             $finalData['id'] = $contact_id;                            
                             $this->agile_http("contacts/edit-properties", json_encode($finalData), "PUT");
+                            
+                            $tags_json = array(
+                                            'id' => $contact_id,
+                                            'tags' => $finalData['tags']
+                                        );
+                            
+                            $this->agile_http("contacts/edit/tags", json_encode($tags_json), "PUT");      
                         }
                         else{
                             $this->agile_http("contacts", json_encode($finalData), "POST");

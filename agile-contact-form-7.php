@@ -297,14 +297,14 @@ if (!class_exists('AgileCF7Addon')) {
                         
                         foreach ($agileFields as $fieldKey => $fieldVal) {
                             if ($mappedFields[$fieldKey] != '') {
-                                if ($fieldVal['type'] == 'CUSTOM') {
+                                if ($fieldVal['type'] == 'CUSTOM') {                        
 
                                     if(is_array($formdata[$mappedFields[$fieldKey]])){
                                         $contactProperties[] = array(
                                             "name" => $fieldVal['name'],
                                             "value" => $formdata[$mappedFields[$fieldKey]][0],
                                             "type" => $fieldVal['type']
-                                        );
+                                        );                                         
                                     }
                                     else{
                                         $contactProperties[] = array(
@@ -315,6 +315,10 @@ if (!class_exists('AgileCF7Addon')) {
                                     }
                                     
                                 } elseif ($fieldVal['type'] == 'SYSTEM') {
+                                    if($fieldKey == "email"){
+                                        $contact_email = $formdata[$mappedFields[$fieldKey]];           
+                                    }
+
                                     if ($fieldVal['is_address']) {
                                         $addressField = explode("_", $fieldKey);
                                         $addressProp[$addressField[1]] = $formdata[$mappedFields[$fieldKey]];
@@ -335,7 +339,7 @@ if (!class_exists('AgileCF7Addon')) {
                                                 );
                                             }                                            
                                         }
-                                    }
+                                    }                                    
                                 }
                             }
                         }
@@ -363,9 +367,21 @@ if (!class_exists('AgileCF7Addon')) {
                         //for web tracking
                         if (isset($formdata[$mappedFields['email']]) && $formdata[$mappedFields['email']] != '') {
                             $_SESSION['agileCRMTrackEmail'] = $formdata[$mappedFields['email']];
+                        }                       
+
+                        $search_email = $this->agile_http("contacts/search/email/".$contact_email, null, "GET");
+
+                        $search_email = json_decode($search_email, false, 512, JSON_BIGINT_AS_STRING);
+
+                        if($search_email && $search_email->id){
+                            $contact_id = $search_email->id;
+                            $finalData['id'] = $contact_id;                            
+                            $this->agile_http("contacts/edit-properties", json_encode($finalData), "PUT");
                         }
-                       ///file_put_contents("cf7outputtest.txt", print_r($formdata, true));
-                        $this->agile_http("contacts", json_encode($finalData), "POST");
+                        else{
+                            $this->agile_http("contacts", json_encode($finalData), "POST");
+                        }
+
                     }
                 }
             }
@@ -462,4 +478,3 @@ if (!class_exists('AgileCF7Addon')) {
 
     new AgileCF7Addon();
 }
-
